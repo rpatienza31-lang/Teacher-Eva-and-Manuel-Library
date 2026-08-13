@@ -58,6 +58,10 @@ required for all staff/admin accounts**.
 ### 1. Prerequisites
 - Node 20.6+ (uses `--env-file-if-exists`), a PostgreSQL database, a Cloudflare
   R2 bucket, and (optionally) a Resend account.
+- **Database:** any Postgres host works — the app uses its own built-in
+  magic-link auth, so it needs only a plain Postgres database, not Supabase's
+  auth. A good **free** choice (no 2-project cap) is [Neon](https://neon.tech):
+  create a project and paste its connection string into `DATABASE_URL`.
 
 ### 2. Configure
 ```bash

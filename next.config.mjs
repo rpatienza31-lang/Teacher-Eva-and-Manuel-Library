@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   // Security headers applied to every response. The app never proxies file
-  // bytes — downloads redirect to short-lived presigned R2 URLs (see §8).
+  // bytes — downloads redirect to short-lived presigned storage URLs (see §8).
   async headers() {
     return [
       {

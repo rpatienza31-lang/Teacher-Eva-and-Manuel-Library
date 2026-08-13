@@ -59,7 +59,7 @@ export const products = pgTable(
 );
 
 // ---------------------------------------------------------------------------
-// files — one uploaded artifact, tagged by week + type, private in R2
+// files — one uploaded artifact, tagged by week + type, private in object storage
 // ---------------------------------------------------------------------------
 export const files = pgTable(
   "files",
@@ -71,7 +71,7 @@ export const files = pgTable(
     weekNumber: smallint("week_number").notNull(), // 1..10
     fileType: text("file_type").notNull(), // docx | pdf | pptx | image
     displayName: text("display_name").notNull(),
-    storageKey: text("storage_key").unique().notNull(), // key in R2
+    storageKey: text("storage_key").unique().notNull(), // object key in storage
     sizeBytes: bigint("size_bytes", { mode: "number" }),
     isPublished: boolean("is_published").notNull().default(false),
     uploadedBy: uuid("uploaded_by").references(() => users.id),

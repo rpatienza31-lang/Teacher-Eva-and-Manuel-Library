@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { files } from "@/db/schema";
 import { requireRole, jsonError, HttpError } from "@/lib/guards";
 import { canManageFiles } from "@/lib/roles";
-import { deleteObject } from "@/lib/r2";
+import { deleteObject } from "@/lib/storage";
 import { audit } from "@/lib/audit";
 import { recordFileSchema } from "@/lib/validation";
 
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * Record a file row after the browser finishes the direct-to-R2 upload.
+ * Record a file row after the browser finishes the direct-to-storage upload.
  * Files start UNPUBLISHED so a half-uploaded week is never visible (§9.2).
  */
 export async function POST(req: NextRequest) {
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/** Delete a file (also removes the R2 object). */
+/** Delete a file (also removes the stored object). */
 export async function DELETE(req: NextRequest) {
   try {
     const ctx = await requireRole(["editor", "admin"]);
@@ -76,7 +76,7 @@ export async function DELETE(req: NextRequest) {
     if (!row) throw new HttpError(404, "File not found");
 
     await deleteObject(row.storageKey).catch((e) =>
-      console.error("R2 delete failed (versioning retains it):", e)
+      console.error("storage delete failed (versioning retains it):", e)
     );
     await db.delete(files).where(eq(files.id, fileId));
 

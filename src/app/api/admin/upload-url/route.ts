@@ -4,11 +4,11 @@ import { db } from "@/db";
 import { products } from "@/db/schema";
 import { requireRole, jsonError, HttpError } from "@/lib/guards";
 import { canManageFiles } from "@/lib/roles";
-import { buildStorageKey, presignUpload, subjectSlug } from "@/lib/r2";
+import { buildStorageKey, presignUpload, subjectSlug } from "@/lib/storage";
 import { ALLOWED_CONTENT_TYPES, presignUploadSchema } from "@/lib/validation";
 
 /**
- * Issue a presigned PUT so the browser uploads large files directly to R2
+ * Issue a presigned PUT so the browser uploads large files directly to storage
  * (SPEC §8) — the app server never handles the bytes. Type + size are
  * validated server-side before the URL is issued.
  */

@@ -9,11 +9,15 @@ const schema = z.object({
   APP_URL: z.string().url().default("http://localhost:3000"),
   AUTH_SECRET: z.string().min(16, "AUTH_SECRET must be a long random string"),
 
-  R2_ACCOUNT_ID: z.string().default(""),
-  R2_ACCESS_KEY_ID: z.string().default(""),
-  R2_SECRET_ACCESS_KEY: z.string().default(""),
-  R2_BUCKET: z.string().default("lesson-plans"),
-  R2_ENDPOINT: z.string().default(""),
+  // Object storage — S3-compatible (Backblaze B2 by default; R2 also works).
+  STORAGE_ENDPOINT: z.string().default(""),
+  STORAGE_REGION: z.string().default(""),
+  STORAGE_ACCESS_KEY_ID: z.string().default(""),
+  STORAGE_SECRET_ACCESS_KEY: z.string().default(""),
+  STORAGE_BUCKET: z.string().default("lesson-plans"),
+  // Optional CDN/custom-domain base (e.g. Cloudflare in front of B2) so
+  // download links are served with free egress. Leave empty to hit the store.
+  STORAGE_PUBLIC_BASE_URL: z.string().default(""),
 
   RESEND_API_KEY: z.string().default(""),
   EMAIL_FROM: z

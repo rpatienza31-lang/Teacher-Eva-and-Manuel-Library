@@ -4,7 +4,7 @@ import { emailDryRun, env } from "./env";
 /**
  * Email delivery (SPEC §9.3). Sends through a bulk-capable transactional
  * provider (Resend) — NEVER Gmail. Emails are tiny notifications with NO
- * attachments; files always stay in R2 and are self-served via login links.
+ * attachments; files always stay in object storage and are self-served via login links.
  *
  * EMAIL_DRY_RUN=1 prints to the console instead of sending, so the app is
  * usable locally before Resend / DNS (SPF, DKIM, DMARC) is configured.

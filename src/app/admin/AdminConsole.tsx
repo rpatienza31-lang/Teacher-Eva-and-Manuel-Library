@@ -337,13 +337,13 @@ function FilesTab({ products }: { products: Product[] }) {
         const pd = await presign.json();
         if (!presign.ok) throw new Error(pd.error);
 
-        // Direct browser → R2 PUT (bytes never touch the app server).
+        // Direct browser → storage PUT (bytes never touch the app server).
         const put = await fetch(pd.uploadUrl, {
           method: "PUT",
           headers: { "Content-Type": file.type },
           body: file,
         });
-        if (!put.ok) throw new Error("R2 upload failed");
+        if (!put.ok) throw new Error("Storage upload failed");
 
         const rec = await fetch("/api/admin/files", {
           method: "POST",

@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node --env-file-if-exists=.env --import tsx src/db/migrate.ts",
-    "db:seed": "node --env-file-if-exists=.env --import tsx src/db/seed.ts"
+    "db:seed": "node --env-file-if-exists=.env --import tsx src/db/seed.ts",
+    "storage:cors": "node --env-file-if-exists=.env scripts/set-cors.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.658.0",

@@ -33,7 +33,7 @@ export async function getDashboard(userId: string): Promise<DashboardProduct[]> 
       status: entitlements.status,
       expiresAt: entitlements.expiresAt,
       publishedFileCount: sql<number>`count(${files.id}) filter (where ${files.isPublished})`,
-      newThisWeek: sql<number>`count(${files.id}) filter (where ${files.isPublished} and ${files.uploadedAt} >= ${since})`,
+      newThisWeek: sql<number>`count(${files.id}) filter (where ${files.isPublished} and ${files.uploadedAt} >= ${since.toISOString()}::timestamptz)`,
     })
     .from(entitlements)
     .innerJoin(products, eq(products.id, entitlements.productId))

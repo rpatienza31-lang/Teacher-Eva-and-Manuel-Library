@@ -84,6 +84,15 @@ export async function presignUpload(
   return getSignedUrl(s3, command, { expiresIn: PRESIGN_PUT_TTL });
 }
 
+/** Fetch an object's raw bytes server-side (used to build a .zip bundle). */
+export async function getObjectBytes(storageKey: string): Promise<Uint8Array> {
+  const res = await s3.send(
+    new GetObjectCommand({ Bucket: env.STORAGE_BUCKET, Key: storageKey })
+  );
+  if (!res.Body) throw new Error(`Empty object body for ${storageKey}`);
+  return res.Body.transformToByteArray();
+}
+
 export async function deleteObject(storageKey: string): Promise<void> {
   await s3.send(
     new DeleteObjectCommand({ Bucket: env.STORAGE_BUCKET, Key: storageKey })

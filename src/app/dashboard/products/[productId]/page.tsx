@@ -45,6 +45,7 @@ export default async function ProductPage({
 
   const { product, byWeek, since } = data;
   const weeks = Array.from({ length: 10 }, (_, i) => i + 1);
+  const hasFiles = Array.from(byWeek.values()).some((a) => a.length > 0);
 
   return (
     <>
@@ -60,6 +61,15 @@ export default async function ProductPage({
           Grade {product.grade} · {product.subject} · Term {product.term}
         </p>
 
+        {hasFiles && (
+          <a
+            href={`/api/download-zip/${product.id}`}
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+          >
+            ⬇ Download all files (.zip)
+          </a>
+        )}
+
         <div className="mt-6 space-y-4">
           {weeks.map((w) => {
             const items = byWeek.get(w) ?? [];
@@ -67,10 +77,17 @@ export default async function ProductPage({
               <Card key={w}>
                 <div className="flex items-center justify-between">
                   <h2 className="font-semibold text-slate-800">Week {w}</h2>
-                  {items.length === 0 && (
+                  {items.length === 0 ? (
                     <span className="text-xs text-slate-400">
                       Not yet available
                     </span>
+                  ) : (
+                    <a
+                      href={`/api/download-zip/${product.id}?week=${w}`}
+                      className="text-xs font-semibold text-brand-600 hover:underline"
+                    >
+                      ⬇ Download week (.zip)
+                    </a>
                   )}
                 </div>
                 {items.length > 0 && (

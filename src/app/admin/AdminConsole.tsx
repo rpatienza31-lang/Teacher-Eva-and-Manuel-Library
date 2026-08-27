@@ -299,6 +299,27 @@ type FileRow = {
   sizeBytes: number | null;
 };
 
+// Map file extension -> content type. Folder uploads often report an empty
+// file.type, so we resolve from the extension (and must send the SAME value in
+// both the presign request and the PUT header, or the signature won't match).
+const EXT_CONTENT_TYPE: Record<string, string> = {
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  pdf: "application/pdf",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  webp: "image/webp",
+  gif: "image/gif",
+};
+
+function resolveContentType(file: File): string | null {
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  if (EXT_CONTENT_TYPE[ext]) return EXT_CONTENT_TYPE[ext];
+  const allowed = new Set(Object.values(EXT_CONTENT_TYPE));
+  return allowed.has(file.type) ? file.type : null;
+}
+
 function FilesTab({ products }: { products: Product[] }) {
   const [productId, setProductId] = useState("");
   const [week, setWeek] = useState("1");
@@ -318,10 +339,29 @@ function FilesTab({ products }: { products: Product[] }) {
 
   async function handleUpload(list: FileList | null) {
     if (!list || !productId) return;
+
+    // A folder pick brings along junk (.DS_Store, hidden/system files) and
+    // unsupported types — keep only real, allowed files so they don't error.
+    const candidates = Array.from(list)
+      .filter((f) => !f.name.startsWith(".") && f.size > 0)
+      .map((f) => ({ file: f, contentType: resolveContentType(f) }))
+      .filter(
+        (c): c is { file: File; contentType: string } => c.contentType !== null
+      );
+
+    if (candidates.length === 0) {
+      setMsg({
+        ok: false,
+        text: "No supported files found (Word, PPT, PDF, or images).",
+      });
+      return;
+    }
+
     setUploading(true);
     setMsg(null);
     let ok = 0;
-    for (const file of Array.from(list)) {
+    let failed = 0;
+    for (const { file, contentType } of candidates) {
       try {
         const presign = await fetch("/api/admin/upload-url", {
           method: "POST",
@@ -330,7 +370,7 @@ function FilesTab({ products }: { products: Product[] }) {
             productId,
             weekNumber: Number(week),
             filename: file.name,
-            contentType: file.type,
+            contentType,
             sizeBytes: file.size,
           }),
         });
@@ -340,7 +380,7 @@ function FilesTab({ products }: { products: Product[] }) {
         // Direct browser → storage PUT (bytes never touch the app server).
         const put = await fetch(pd.uploadUrl, {
           method: "PUT",
-          headers: { "Content-Type": file.type },
+          headers: { "Content-Type": contentType },
           body: file,
         });
         if (!put.ok) throw new Error("Storage upload failed");
@@ -359,16 +399,17 @@ function FilesTab({ products }: { products: Product[] }) {
         });
         if (!rec.ok) throw new Error("record failed");
         ok += 1;
-      } catch (e) {
-        setMsg({
-          ok: false,
-          text: `Upload error: ${e instanceof Error ? e.message : "failed"}`,
-        });
+      } catch {
+        failed += 1;
       }
     }
     setUploading(false);
-    if (ok > 0)
-      setMsg({ ok: true, text: `${ok} file(s) uploaded (unpublished).` });
+    setMsg({
+      ok: ok > 0,
+      text: `${ok} file(s) uploaded${
+        failed ? `, ${failed} failed` : ""
+      } (unpublished).`,
+    });
     load();
   }
 
@@ -423,17 +464,36 @@ function FilesTab({ products }: { products: Product[] }) {
 
       {productId && (
         <>
-          <div className="mt-4">
-            <input
-              type="file"
-              multiple
-              disabled={uploading}
-              onChange={(e) => handleUpload(e.target.files)}
-              className="text-sm"
-              accept=".docx,.pdf,.pptx,.png,.jpg,.jpeg,.webp,.gif"
-            />
+          <div className="mt-4 flex flex-col gap-2">
+            <label className="text-sm text-slate-600">
+              <span className="mr-2 font-medium">Choose files:</span>
+              <input
+                type="file"
+                multiple
+                disabled={uploading}
+                onChange={(e) => handleUpload(e.target.files)}
+                className="text-sm"
+                accept=".docx,.pdf,.pptx,.png,.jpg,.jpeg,.webp,.gif"
+              />
+            </label>
+            <label className="text-sm text-slate-600">
+              <span className="mr-2 font-medium">…or a whole folder:</span>
+              <input
+                type="file"
+                multiple
+                disabled={uploading}
+                onChange={(e) => handleUpload(e.target.files)}
+                className="text-sm"
+                {...({ webkitdirectory: "", directory: "" } as unknown as Record<string, unknown>)}
+              />
+            </label>
+            <p className="text-xs text-slate-400">
+              Everything inside the folder uploads to {`Week ${week}`} of the
+              selected product. Unsupported files and hidden system files are
+              skipped automatically.
+            </p>
             {uploading && (
-              <span className="ml-2 text-sm text-slate-500">Uploading…</span>
+              <span className="text-sm text-slate-500">Uploading…</span>
             )}
           </div>
 
